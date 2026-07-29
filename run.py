@@ -20,10 +20,11 @@ from config.settings import V7Config
 from core.orchestrator import HedgeFundSwarmV7
 
 if __name__ == "__main__":
-    # Start live dashboard
+    # Start live dashboard (uses Railway PORT env or defaults to 8081)
     try:
         from dashboard.app import start_dashboard
-        start_dashboard(port=8081)
+        dashboard_port = int(os.environ.get("PORT", "8081"))
+        start_dashboard(port=dashboard_port)
     except Exception as e:
         print(f"  ⚠️  Dashboard not started: {e}")
     print("""
