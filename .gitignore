@@ -1,0 +1,28 @@
+# Env files
+.env
+*.env
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+
+# Logs
+logs/
+*.log
+
+# Memory / local state
+memory/
+
+# IDE
+.vscode/
+.idea/
+
+# Status file (live dashboard)
+live_status.json
+
+# OS files
+.DS_Store
+Thumbs.db
