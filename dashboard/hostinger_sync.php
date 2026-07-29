@@ -68,20 +68,22 @@ if ($method === "POST") {
 
 // ── GET: Serve data or dashboard HTML ──
 
-// API endpoints
-if ($path === "/trading/api/status" || $path === "/trading/status.json") {
+// Check if this is an API request (root-level paths now that file is at domain root)
+$is_api_request = ($path === "/status.json" || $path === "/api/status" || $path === "/keys.json" || $path === "/api/keys");
+
+if ($is_api_request) {
     header("Content-Type: application/json");
-    $f = "$DATA_DIR/status.json";
-    echo file_exists($f) ? file_get_contents($f) : '{"engine":"OFFLINE"}';
+    if (strpos($path, "status") !== false) {
+        $f = "$DATA_DIR/status.json";
+        echo file_exists($f) ? file_get_contents($f) : '{"engine":"OFFLINE"}';
+    } else {
+        $f = "$DATA_DIR/keys.json";
+        echo file_exists($f) ? file_get_contents($f) : '[]';
+    }
     exit;
 }
 
-if ($path === "/trading/api/keys" || $path === "/trading/keys.json") {
-    header("Content-Type: application/json");
-    $f = "$DATA_DIR/keys.json";
-    echo file_exists($f) ? file_get_contents($f) : '[]';
-    exit;
-}
+// POST handler is above — this point reached only for GET on "/"
 
 // Serve the dashboard HTML
 ?>
@@ -138,6 +140,10 @@ h2{font-size:13px;color:#9ca3af;margin-bottom:8px}
   <h2>📊 Open Positions</h2>
   <div class="pos-grid" id="positionsContainer"></div>
 </div>
+<div class="pane">
+  <h2>📜 Trade History (Last 10)</h2>
+  <div id="tradeHistoryContainer"></div>
+</div>
 <div class="footer">V7 Hedge Fund Swarm — Data refreshes every 5s</div>
 
 <script>
@@ -178,6 +184,30 @@ async function refresh(){
       }).join('');
     }else{
       pc.innerHTML='<div class="empty">No open positions</div>';
+    }
+    
+    // Trade History
+    const th = document.getElementById('tradeHistoryContainer');
+    if(d.trade_history && d.trade_history.length){
+      th.innerHTML = '<table style="width:100%;border-collapse:collapse;font-size:12px">'+
+        '<tr style="color:#6b7280;font-size:10px;text-transform:uppercase">'+
+        '<th style="text-align:left;padding:6px 8px;border-bottom:1px solid #1e1f2b">Time</th>'+
+        '<th style="text-align:left;padding:6px 8px;border-bottom:1px solid #1e1f2b">Symbol</th>'+
+        '<th style="text-align:left;padding:6px 8px;border-bottom:1px solid #1e1f2b">Direction</th>'+
+        '<th style="text-align:left;padding:6px 8px;border-bottom:1px solid #1e1f2b">Conf</th>'+
+        '<th style="text-align:left;padding:6px 8px;border-bottom:1px solid #1e1f2b">P&amp;L</th></tr>'+
+        d.trade_history.map(t => {
+          const pnl = t.pnl ? parseFloat(t.pnl).toFixed(2) : '—';
+          const pnlCls = t.pnl > 0 ? 'pos' : (t.pnl < 0 ? 'neg' : '');
+          const ts = (t.timestamp || '').slice(11,19) || '—';
+          return '<tr><td style="padding:5px 8px;border-bottom:1px solid #1e1f2b;color:#9ca3af">'+ts+'</td>'+
+            '<td style="padding:5px 8px;border-bottom:1px solid #1e1f2b">'+t.symbol+'</td>'+
+            '<td style="padding:5px 8px;border-bottom:1px solid #1e1f2b"><span class="side '+(t.direction||'NEUTRAL')+'">'+(t.direction||'—')+'</span></td>'+
+            '<td style="padding:5px 8px;border-bottom:1px solid #1e1f2b">'+(t.confidence||'—')+'</td>'+
+            '<td style="padding:5px 8px;border-bottom:1px solid #1e1f2b" class="pnl '+pnlCls+'">$'+pnl+'</td></tr>';
+        }).join('')+'</table>';
+    } else {
+      th.innerHTML = '<div class="empty">No trade history yet</div>';
     }
   } catch(e){
     document.getElementById('refreshText').textContent='⚠️ offline';

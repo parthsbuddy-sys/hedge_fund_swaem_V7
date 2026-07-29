@@ -350,12 +350,30 @@ class HedgeFundSwarmV7:
                 "tick_time": round(elapsed, 1),
                 "win_rate": round(win_rate * 100, 1),
                 "positions_list": positions_data,
+                "trade_history": self._get_recent_trades(),
             }
             path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "live_status.json")
             with open(path, "w") as f:
                 json.dump(status, f)
         except Exception as e:
             print(f"  ⚠️  Status write error: {e}")
+
+    def _get_recent_trades(self) -> list:
+        """Fetch last 10 trade decisions from the memory database."""
+        try:
+            import sqlite3
+            db_path = os.path.join(self.config.data_dir, "memory", "decisions.db")
+            if not os.path.exists(db_path):
+                return []
+            conn = sqlite3.connect(db_path)
+            conn.row_factory = sqlite3.Row
+            cur = conn.cursor()
+            cur.execute("SELECT * FROM decisions ORDER BY id DESC LIMIT 10")
+            rows = [dict(r) for r in cur.fetchall()]
+            conn.close()
+            return rows
+        except Exception as e:
+            return [{"error": str(e)}]
 
     def run(self):
         """Main trading loop."""
