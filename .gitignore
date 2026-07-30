@@ -21,6 +21,7 @@ memory/
 .idea/
 
 # Status file (live dashboard)
+*.pid
 live_status.json
 
 # OS files
