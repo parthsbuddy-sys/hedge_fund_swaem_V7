@@ -27,17 +27,20 @@ def write_json(path, data):
 
 def get_status():
     s = read_json(STATUS_PATH, {"engine":"OFFLINE","balance":0,"available":0,"positions":0})
-    # On Railway/server, the engine runs as the main process — no PID file.
-    # Trust live_status.json if it says RUNNING and was updated recently.
     pid = read_json(ENGINE_PID_FILE, {}).get("pid")
     if pid:
         try:
             os.kill(pid, 0)
             s["engine"] = "RUNNING"
         except:
-            s["engine"] = "STOPPED"
+            # PID stale — trust live_status.json if recently updated
+            mtime = os.path.getmtime(STATUS_PATH) if os.path.exists(STATUS_PATH) else 0
+            if time.time() - mtime < 120 and s.get("engine") == "RUNNING":
+                pass  # status file says RUNNING and is fresh — trust it
+            else:
+                s["engine"] = "STOPPED"
     elif s.get("engine") == "RUNNING":
-        pass  # trust the engine's own status
+        pass
     else:
         s["engine"] = "STOPPED"
     return s
