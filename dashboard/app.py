@@ -61,6 +61,16 @@ def index():
 def api_status():
     return jsonify(get_status())
 
+@app.route("/api/ip")
+def api_ip():
+    """Return the server's public IP (for Delta whitelisting)."""
+    import requests
+    try:
+        r = requests.get("https://api.ipify.org", timeout=5)
+        return jsonify({"ip": r.text.strip()})
+    except Exception as e:
+        return jsonify({"ip": f"error: {e}"})
+
 @app.route("/api/keys", methods=["GET"])
 def api_list_keys():
     return jsonify(get_keys())
