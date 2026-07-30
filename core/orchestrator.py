@@ -76,10 +76,18 @@ class HedgeFundSwarmV7:
         """)
 
     def get_portfolio_state(self) -> dict:
-        wallet = self.brokers[0].get_wallet()
-        positions = self.brokers[0].get_positions()
-        # Also check account #2
-        wallet2 = self.brokers[1].get_wallet()
+        try:
+            wallet = self.brokers[0].get_wallet()
+        except:
+            wallet = {"balance": 0, "available": 0, "margin": 0}
+        try:
+            positions = self.brokers[0].get_positions()
+        except:
+            positions = []
+        try:
+            wallet2 = self.brokers[1].get_wallet()
+        except:
+            wallet2 = {"balance": 0, "available": 0}
         return {
             "balance": wallet.get("balance", 0),
             "available": wallet.get("available", 0),

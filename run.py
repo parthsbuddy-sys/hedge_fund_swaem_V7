@@ -44,8 +44,16 @@ if __name__ == "__main__":
     from execution import DeltaBroker
     broker1 = DeltaBroker(account=1)
     broker2 = DeltaBroker(account=2)
-    w1 = broker1.get_wallet()
-    w2 = broker2.get_wallet()
+    try:
+        w1 = broker1.get_wallet()
+    except Exception as e:
+        print(f"  ⚠️  Acc#1 wallet check failed: {e}")
+        w1 = {"balance": 0, "available": 0}
+    try:
+        w2 = broker2.get_wallet()
+    except Exception as e:
+        print(f"  ⚠️  Acc#2 wallet check failed: {e}")
+        w2 = {"balance": 0, "available": 0}
     print(f"  💰 Acc#1: ${w1.get('balance',0):.2f} (Avail: ${w1.get('available',0):.2f})")
     print(f"  💰 Acc#2: ${w2.get('balance',0):.2f} (Avail: ${w2.get('available',0):.2f})")
 
@@ -55,7 +63,11 @@ if __name__ == "__main__":
         print(f"  ✅ Trading capital available")
 
     for i, b in enumerate([broker1, broker2], 1):
-        positions = b.get_positions()
+        try:
+            positions = b.get_positions()
+        except Exception as e:
+            print(f"  ⚠️  Acc#{i} positions check failed: {e}")
+            continue
         if positions:
             print(f"  📋 Acc#{i} open positions: {len(positions)}")
             for p in positions[:2]:
