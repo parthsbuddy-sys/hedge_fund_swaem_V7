@@ -362,7 +362,11 @@ class HedgeFundSwarmV7:
         """Fetch last 10 trade decisions from the memory database."""
         try:
             import sqlite3
-            db_path = os.path.join(self.config.data_dir, "memory", "decisions.db")
+            base = getattr(self.config, 'data_dir', '.')
+            db_path = os.path.join(base, "memory", "decisions.db")
+            if not os.path.exists(db_path):
+                # Fallback: try project root
+                db_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "memory", "decisions.db")
             if not os.path.exists(db_path):
                 return []
             conn = sqlite3.connect(db_path)
@@ -373,7 +377,7 @@ class HedgeFundSwarmV7:
             conn.close()
             return rows
         except Exception as e:
-            return [{"error": str(e)}]
+            return []
 
     def run(self):
         """Main trading loop."""
