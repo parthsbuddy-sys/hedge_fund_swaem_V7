@@ -226,12 +226,21 @@ HTML = r"""<!DOCTYPE html>
   .empty{color:#6b7280;text-align:center;padding:30px;font-size:14px}
   .engine-card{background:#12131a;border:1px solid #1e1f2b;border-radius:10px;padding:20px;display:flex;flex-direction:column;gap:12px;max-width:500px}
   .engine-card .info{display:flex;justify-content:space-between;font-size:13px}
+  .curr-btn{background:transparent;border:none;color:#6b7280;padding:3px 8px;border-radius:4px;cursor:pointer;font-size:11px;transition:.2s}
+  .curr-btn:hover{color:#e2e8f0}
+  .curr-btn.active{background:#818cf8;color:#0a0b0e;font-weight:600}
+  .inr-sub{color:#9ca3af;font-size:10px;display:block}
 </style>
 </head>
 <body>
 
 <div class="nav">
   <h1>🦊 V7 Hedge Fund</h1>
+  <div style="display:flex;align-items:center;gap:6px;font-size:11px;background:#1a1b2e;border:1px solid #2d2d3a;border-radius:6px;padding:3px">
+    <button id="currUsd" class="curr-btn active" onclick="setCurrency('USD')">$ USD</button>
+    <button id="currInr" class="curr-btn" onclick="setCurrency('INR')">₹ INR</button>
+    <button id="currBoth" class="curr-btn" onclick="setCurrency('BOTH')">$ ₹ Both</button>
+  </div>
   <div class="tabs">
     <button class="active" onclick="switchTab('dashboard')">📊 Dashboard</button>
     <button onclick="switchTab('keys')">🔑 API Keys</button>
@@ -322,6 +331,37 @@ HTML = r"""<!DOCTYPE html>
 <div class="toast" id="toast"></div>
 
 <script>
+const USD_TO_INR = 83.50;
+
+let currencyMode = 'USD';
+
+function fmtINR(val){
+  return '₹' + Number(val).toLocaleString('en-IN', {minimumFractionDigits:2, maximumFractionDigits:2});
+}
+
+function setCurrency(mode){
+  currencyMode = mode;
+  document.querySelectorAll('.curr-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('curr'+mode.charAt(0)+mode.slice(1).toLowerCase()).classList.add('active');
+  loadDashboard();
+}
+
+function renderVal(usdVal, label){
+  const usd = '$$' + (usdVal||0).toFixed(2);
+  const inr = fmtINR((usdVal||0) * USD_TO_INR);
+  if(currencyMode==='USD') return usd;
+  if(currencyMode==='INR') return inr;
+  return usd + '<span class="inr-sub">' + inr + '</span>';
+}
+
+function renderSub(usdVal, prefix){
+  const usd = prefix + '$$' + (usdVal||0).toFixed(2);
+  const inr = prefix + fmtINR((usdVal||0) * USD_TO_INR);
+  if(currencyMode==='USD') return usd;
+  if(currencyMode==='INR') return inr;
+  return usd + ' <span style="color:#6b7280">(' + inr + ')</span>';
+}
+
 // ── Tab switching ──
 function switchTab(name){
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
@@ -355,7 +395,7 @@ async function loadDashboard(){
   document.getElementById('refreshText').textContent=new Date().toLocaleTimeString();
   
   document.getElementById('summaryCards').innerHTML=`
-    <div class="card purple"><div class="lbl">Balance</div><div class="val">$${(d.balance||0).toFixed(2)}</div><div class="sub">Available: $${(d.available||0).toFixed(2)}</div></div>
+    <div class="card purple"><div class="lbl">Balance</div><div class="val">${renderVal(d.balance)}</div><div class="sub">${renderSub(d.available, 'Available: ')}</div></div>
     <div class="card ${d.positions>0?'green':'blue'}"><div class="lbl">Open Positions</div><div class="val">${d.positions||0}</div></div>
     <div class="card orange"><div class="lbl">Trades This Tick</div><div class="val">${d.trades_opened||0}</div></div>
     <div class="card ${(d.win_rate||0)>=50?'green':'red'}"><div class="lbl">Win Rate</div><div class="val">${d.win_rate||0}%</div></div>
@@ -370,9 +410,9 @@ async function loadDashboard(){
       return `<div class="pos-card">
         <div class="top"><span class="sym">#${p.account} ${p.symbol}</span><span class="side ${p.side}">${p.side}</span></div>
         <div class="row"><span>Size</span><span>${(p.size||0).toFixed(0)} cts</span></div>
-        <div class="row"><span>Entry</span><span>$${(p.entry||0).toFixed(2)}</span></div>
-        <div class="row"><span>Mark</span><span>$${(p.mark||0).toFixed(2)}</span></div>
-        <div class="row"><span>P&L</span><span class="pnl ${pc2}">$${(p.pnl||0).toFixed(2)} (${pp}%)</span></div>
+        <div class="row"><span>Entry</span><span>${renderVal(p.entry)}</span></div>
+        <div class="row"><span>Mark</span><span>${renderVal(p.mark)}</span></div>
+        <div class="row"><span>P&L</span><span class="pnl ${pc2}">${renderVal(p.pnl)} (${pp}%)</span></div>
       </div>`;
     }).join('');
   }else{

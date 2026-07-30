@@ -12,7 +12,7 @@
  */
 
 // ── CONFIG ─────────────────────────────────────────────────
-$SYNC_SECRET = "change-this-secret";  // Set same secret in your local sync script
+$SYNC_SECRET = "lbQ3WfMryKxiobPdxbkPyAVJxXfxVmJnGy00xkH0d144b6b2";  // Set same secret in your local sync script
 $DATA_DIR = __DIR__ . "/data";         // Where status/keys JSON files are stored
 // ────────────────────────────────────────────────────────────
 

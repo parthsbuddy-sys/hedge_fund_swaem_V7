@@ -24,11 +24,12 @@ class V7Config:
 
     # Delta
     exchange: str = "delta"
-    base_url: str = field(default_factory=lambda: os.getenv("DELTA_BASE_URL", "https://cdn-ind.testnet.deltaex.org"))
+    base_url: str = field(default_factory=lambda: os.getenv("DELTA_BASE_URL", "https://cdn.deltaex.org"))
 
     # Paths
     memory_path: str = "memory"
     log_dir: str = "logs"
+    data_dir: str = "."
 
     @classmethod
     def from_env(cls):
