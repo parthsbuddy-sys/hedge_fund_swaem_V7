@@ -394,7 +394,14 @@ class HedgeFundSwarmV7:
 
         try:
             while self.running:
-                self.run_tick()
+                try:
+                    self.run_tick()
+                except Exception as e:
+                    logger.exception(f"  💥 Tick crashed: {e}")
+                    self._write_live_status(
+                        {"balance": 0, "available": 0, "positions": 0, "daily_pnl": 0},
+                        0, 0, 0.0
+                    )
 
                 if not self.running:
                     break
